@@ -42,6 +42,12 @@ section#post-list article footer {
   padding: 20px;
 }
 
+section#post-list article footer .actions button {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
 section#post-list article footer .actions {
   padding-bottom: 10px;
 }

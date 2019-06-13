@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import api from "../services/api";
+import io from "socket.io-client";
 
 import "./Feed.css";
 
@@ -14,39 +15,63 @@ class Feed extends Component {
   };
 
   async componentDidMount() {
+    this.registerToSocket();
+
     const response = await api.get("posts");
 
     this.setState({ feed: response.data });
   }
 
+  registerToSocket = () => {
+    const socket = io("http://localhost:3333");
+
+    socket.on("post", newPost => {
+      this.setState({ feed: [newPost, ...this.state.feed] });
+    });
+
+    socket.on("like", likePost => {
+      this.setState({
+        feed: this.state.feed.map(post =>
+          post._id === likePost._id ? likePost : post
+        )
+      });
+    });
+  };
+
+  handleLike = id => {
+    api.post(`posts/${id}/like`);
+  };
+
   render() {
     return (
       <section id="post-list">
         {this.state.feed.map(post => (
-          <article>
+          <article key={post._id}>
             <header>
               <div className="user-info">
                 <span>{post.author}</span>
-                <span className="place">Blumenau</span>
+                <span className="place">{post.place}</span>
               </div>
 
               <img src={more} alt="Ver mais" />
             </header>
 
-            <img src="" alt="" />
+            <img src={`http://localhost:3333/files/${post.image}`} alt="" />
 
             <footer>
               <div className="actions">
-                <img src={like} alt="Curtir" />
+                <button onClick={() => this.handleLike(post._id)}>
+                  <img src={like} alt="Curtir" />
+                </button>
                 <img src={comment} alt="Comentar" />
                 <img src={send} alt="Compartilhar" />
               </div>
 
-              <strong>900 likes</strong>
+              <strong>{post.likes} Curtidas</strong>
 
               <p>
-                Loucura
-                <span className="hashtags">#legal #react</span>
+                {post.description}
+                <span className="hashtags">{post.hashtags}</span>
               </p>
             </footer>
           </article>
